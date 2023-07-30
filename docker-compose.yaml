@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: strapi-next-js
+      POSTGRES_DB: strapi_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database:/var/lib/postgresql/data
+
+  strapi:
+    image: strapi/strapi:latest
+    container_name: strapi_container
+    environment:
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: strapi_db
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: strapi-next-js
+    volumes:
+      - ./api:/usr/src/api/strapi-app
+    ports:
+      - "1337:1337"
+    depends_on:
+      - postgres
+
+  nextjs:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: nextjs_container
+    environment:
+      - STRAPI_URL=http://127.0.0.1:1337
+      - API_URL=http://127.0.0.1:1337/api
+    volumes:
+      - ./web:/usr/src/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - strapi
